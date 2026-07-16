@@ -155,8 +155,9 @@
   .history-list{display:flex;flex-direction:column;gap:6px;}
   .history-row{
     display:flex;justify-content:space-between;align-items:center;background:var(--verde-bg);
-    border-radius:10px;padding:8px 12px;font-size:12.5px;
+    border-radius:10px;padding:10px 12px;font-size:12.5px;cursor:pointer;min-height:44px;
   }
+  .history-row:active{opacity:0.8;}
   .history-row .h-left{display:flex;flex-direction:column;gap:1px;}
   .history-row .h-prov{font-weight:600;color:var(--ink);}
   .history-row .h-meta{color:var(--ink-soft);font-size:11px;}
@@ -312,10 +313,10 @@
       hlist.innerHTML = `<div class="empty">Aún no hay cuentas pagadas.</div>`;
     } else {
       hlist.innerHTML = [...historial].reverse().map(h => `
-        <div class="history-row">
+        <div class="history-row" data-ver-detalle="${h.id}">
           <div class="h-left">
             <span class="h-prov">${escapeHTML(h.proveedor)}</span>
-            <span class="h-meta">Pagado el ${h.fechaCancelacion} · desde ${escapeHTML(h.cuentaOrigenFinal || '—')}${h.facturaImg ? ' · <button data-ver-factura="'+h.id+'" style="border:none;background:none;color:var(--persona);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;">ver factura</button>' : ''}</span>
+            <span class="h-meta">Pagado el ${h.fechaCancelacion} · desde ${escapeHTML(h.cuentaOrigenFinal || '—')}</span>
           </div>
           <span class="h-monto">${fmt(h.montoTotal)}</span>
         </div>
@@ -326,6 +327,7 @@
     document.getElementById('btn-nueva').onclick = () => { modal = {type:'nueva'}; renderModal(); };
     document.getElementById('btn-exportar').onclick = exportarCSV;
     document.querySelectorAll('[data-ver-factura]').forEach(b => b.onclick = () => mostrarLightbox(b.dataset.verFactura));
+    document.querySelectorAll('[data-ver-detalle]').forEach(row => row.onclick = () => { modal = {type:'detalle', id: row.dataset.verDetalle}; renderModal(); });
     document.querySelectorAll('.tab').forEach(t => t.onclick = () => { filtro = t.dataset.filtro; render(); });
     const btnVaciar = document.getElementById('btn-vaciar');
     if(btnVaciar) btnVaciar.onclick = async () => {
@@ -583,6 +585,41 @@
         render();
       };
     }
+
+    if(modal.type==='detalle'){
+      const h = historial.find(x=>x.id===modal.id);
+      if(!h){ modal=null; return; }
+      const abonos = h.abonos || [];
+      overlay.innerHTML = `
+        <div class="modal">
+          <h3>${escapeHTML(h.proveedor)}</h3>
+          <p class="hint" style="margin-top:-10px;">${escapeHTML(h.tipo)} ${h.descripcion ? '· '+escapeHTML(h.descripcion) : ''}</p>
+          <div class="field"><label>Monto total</label><div style="font-family:var(--font-mono);font-size:18px;font-weight:700;">${fmt(h.montoTotal)}</div></div>
+          <div class="field"><label>Pagada el</label><div>${h.fechaCancelacion}${h.referencia ? ' · Ref: '+escapeHTML(h.referencia) : ''}</div></div>
+          ${h.facturaImg ? `<div class="factura-link" style="margin-bottom:14px;"><button data-ver-factura="${h.id}">Ver factura</button></div>` : ''}
+          <div class="field"><label>Historial de abonos (${abonos.length})</label></div>
+          <div class="history-list">
+            ${abonos.length===0 ? '<div class="empty" style="padding:16px;">Se pagó en una sola exhibición.</div>' : abonos.map(a => `
+              <div class="history-row" style="cursor:default;">
+                <div class="h-left">
+                  <span class="h-prov">${a.fecha}</span>
+                  <span class="h-meta">Desde ${escapeHTML(a.cuenta)}${a.referencia ? ' · Ref: '+escapeHTML(a.referencia) : ''}</span>
+                </div>
+                <span class="h-monto">${fmt(a.monto)}</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-primary" id="m-cerrar" style="flex:1;">Cerrar</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      overlay.onclick = (e) => { if(e.target===overlay){ modal=null; renderModal(); } };
+      document.getElementById('m-cerrar').onclick = () => { modal=null; renderModal(); };
+      const btnFactura = overlay.querySelector('[data-ver-factura]');
+      if(btnFactura) btnFactura.onclick = () => mostrarLightbox(h.id);
+    }
   }
 
   async function moverAHistorial(r, cuentaFinal){
@@ -598,7 +635,8 @@
       facturaImg: r.facturaImg,
       montoTotal: r.montoTotal,
       fechaCancelacion: hoy(),
-      cuentaOrigenFinal: cuentaFinal
+      cuentaOrigenFinal: cuentaFinal,
+      abonos: r.abonos || []
     });
     if(historial.length > HIST_LIMIT){
       historial = historial.slice(historial.length - HIST_LIMIT);
