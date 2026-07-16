@@ -1,0 +1,570 @@
+<div id="app">
+  <div id="loading" class="loading">Cargando tus cuentas…</div>
+</div>
+
+<style>
+  :root{
+    --bg:#F1F2F0;
+    --surface:#FFFFFF;
+    --ink:#141A1F;
+    --ink-soft:#4B5661;
+    --muted:#8A94A0;
+    --border:#DDE2E6;
+    --rojo:#C4291C;
+    --rojo-bg:#FDECEA;
+    --amarillo:#B7791F;
+    --amarillo-bg:#FEF6E7;
+    --verde:#12795A;
+    --verde-bg:#E7F5EF;
+    --persona:#0D7D72;
+    --empresa:#4C4FCC;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  #app{
+    font-family:var(--font-sans);
+    color:var(--ink);
+    background:transparent;
+    padding:20px 16px 60px;
+    max-width:920px;
+    margin:0 auto;
+  }
+  .loading{padding:40px;text-align:center;color:var(--muted);font-size:14px;}
+
+  h1{font-size:22px;font-weight:700;letter-spacing:-0.01em;margin:0 0 2px;}
+  .subtitle{color:var(--muted);font-size:13px;margin:0 0 20px;}
+
+  /* Dashboard */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
+  .stat .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+  .stat .value{font-family:var(--font-mono);font-size:19px;font-weight:600;}
+  .stat.rojo .value{color:var(--rojo);}
+  .stat.amarillo .value{color:var(--amarillo);}
+  .stat.info .value{color:var(--ink);}
+
+  /* Toolbar */
+  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:3px;}
+  .tab{border:none;background:none;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--ink-soft);cursor:pointer;}
+  .tab.active{background:var(--ink);color:#fff;}
+  .btn{border:none;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-sans);}
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-primary:hover{background:#000;}
+  .btn-ghost{background:var(--surface);border:1px solid var(--border);color:var(--ink);}
+  .btn-ghost:hover{background:#f5f5f5;}
+  .btn-sm{padding:6px 10px;font-size:12px;border-radius:7px;}
+  .btn-rojo{background:var(--rojo);color:#fff;}
+  .btn-verde{background:var(--verde);color:#fff;}
+
+  /* Cards grid */
+  .grid{display:grid;grid-template-columns:1fr;gap:10px;}
+  @media(min-width:640px){.grid{grid-template-columns:1fr 1fr;}}
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px 14px 12px;
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
+  }
+  .card.estado-rojo::before{background:var(--rojo);}
+  .card.estado-amarillo::before{background:var(--amarillo);}
+
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;padding-left:6px;}
+  .proveedor{font-weight:700;font-size:15px;line-height:1.25;}
+  .tag{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:20px;margin-top:3px;}
+  .tag.persona{background:rgba(13,125,114,0.12);color:var(--persona);}
+  .tag.empresa{background:rgba(76,79,204,0.12);color:var(--empresa);}
+
+  .dia-badge{font-family:var(--font-mono);font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;}
+  .dia-badge.ok{background:#F0F1EF;color:var(--muted);}
+  .dia-badge.alerta{background:var(--amarillo-bg);color:var(--amarillo);}
+  .dia-badge.critico{background:var(--rojo-bg);color:var(--rojo);}
+
+  .descripcion{font-size:13px;color:var(--ink-soft);padding-left:6px;margin:2px 0 10px;}
+
+  .montos{padding-left:6px;margin-bottom:8px;}
+  .monto-pendiente{font-family:var(--font-mono);font-size:22px;font-weight:700;}
+  .monto-total-sub{font-size:11.5px;color:var(--muted);}
+
+  .progress-wrap{padding-left:6px;margin-bottom:10px;}
+  .progress-bar{height:6px;background:#EEEFEC;border-radius:6px;overflow:hidden;margin-bottom:3px;}
+  .progress-fill{height:100%;background:var(--amarillo);}
+  .progress-label{font-size:11px;color:var(--muted);font-family:var(--font-mono);}
+
+  .limite{font-size:11.5px;padding-left:6px;color:var(--muted);margin-bottom:10px;}
+  .limite.vencida{color:var(--rojo);font-weight:600;}
+
+  .card-actions{display:flex;gap:8px;padding-left:6px;}
+
+  .empty{text-align:center;color:var(--muted);font-size:13px;padding:40px 10px;border:1px dashed var(--border);border-radius:14px;}
+
+  /* Form / modal */
+  .overlay{position:fixed;inset:0;background:rgba(20,26,31,0.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50;}
+  .modal{background:#fff;border-radius:16px;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;}
+  .modal h3{margin:0 0 14px;font-size:16px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:4px;}
+  .field input, .field select{
+    width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;
+    font-size:14px;font-family:var(--font-sans);background:#fff;color:var(--ink);
+  }
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+  .hint{font-size:11px;color:var(--muted);margin-top:-6px;margin-bottom:12px;}
+
+  /* History */
+  .history{margin-top:26px;}
+  .history-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .history-head h2{font-size:14px;margin:0;}
+  .history-count{font-size:11.5px;color:var(--muted);font-family:var(--font-mono);}
+  .history-list{display:flex;flex-direction:column;gap:6px;}
+  .history-row{
+    display:flex;justify-content:space-between;align-items:center;background:var(--verde-bg);
+    border-radius:10px;padding:8px 12px;font-size:12.5px;
+  }
+  .history-row .h-left{display:flex;flex-direction:column;gap:1px;}
+  .history-row .h-prov{font-weight:600;color:var(--ink);}
+  .history-row .h-meta{color:var(--ink-soft);font-size:11px;}
+  .history-row .h-monto{font-family:var(--font-mono);color:var(--verde);font-weight:700;}
+  .alerta-limite{background:var(--rojo-bg);color:var(--rojo);border-radius:10px;padding:10px 12px;font-size:12.5px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+
+  .referencia{font-size:11px;color:var(--muted);padding-left:6px;margin:-4px 0 8px;}
+  .factura-link{padding-left:6px;margin-bottom:8px;}
+  .factura-link button{background:none;border:none;color:var(--persona);font-size:12px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline;}
+  .file-input{width:100%;font-size:12.5px;padding:7px 8px;border:1px dashed var(--border);border-radius:8px;background:#fafafa;}
+  .lightbox{position:fixed;inset:0;background:rgba(10,12,14,0.85);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px;}
+  .lightbox img{max-width:100%;max-height:100%;border-radius:8px;}
+  .lightbox-close{position:absolute;top:16px;right:20px;background:#fff;border:none;border-radius:50%;width:34px;height:34px;font-size:16px;cursor:pointer;}
+</style>
+
+<script>
+(function(){
+  const KEY_ACTIVAS = 'cxp-activas-v1';
+  const KEY_HISTORIAL = 'cxp-historial-v1';
+  const HIST_LIMIT = 25;
+
+  let activas = [];
+  let historial = [];
+  let filtro = 'todas';
+  let modal = null; // {type:'nueva'} | {type:'abono', id} | {type:'pagar', id}
+
+  const app = document.getElementById('app');
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function hoy(){ return new Date().toISOString().slice(0,10); }
+  function diasEntre(fechaISO){
+    const a = new Date(fechaISO + 'T00:00:00');
+    const b = new Date(hoy() + 'T00:00:00');
+    return Math.max(0, Math.round((b-a)/86400000));
+  }
+  function fmt(n){
+    return '$' + Number(n||0).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+  function sumaAbonos(r){ return (r.abonos||[]).reduce((s,a)=>s+Number(a.monto||0),0); }
+  function pendiente(r){ return Math.max(0, Number(r.montoTotal) - sumaAbonos(r)); }
+  function estadoDe(r){ return sumaAbonos(r) > 0 ? 'amarillo' : 'rojo'; }
+
+  async function init(){
+    try{
+      const [a, h] = await Promise.all([
+        window.storage.get('activas').catch(()=>null),
+        window.storage.get('historial').catch(()=>null)
+      ]);
+      activas = a && a.value ? JSON.parse(a.value) : [];
+      historial = h && h.value ? JSON.parse(h.value) : [];
+    }catch(e){
+      console.error('Error cargando datos', e);
+      activas = []; historial = [];
+    }
+    render();
+  }
+
+  async function guardarActivas(){
+    try{ await window.storage.set('activas', JSON.stringify(activas)); }
+    catch(e){ console.error('No se pudo guardar activas', e); }
+  }
+  async function guardarHistorial(){
+    try{ await window.storage.set('historial', JSON.stringify(historial)); }
+    catch(e){ console.error('No se pudo guardar historial', e); }
+  }
+
+  function ordenar(lista){
+    return [...lista].sort((x,y)=>{
+      const xVencida = x.fechaLimite && x.fechaLimite < hoy();
+      const yVencida = y.fechaLimite && y.fechaLimite < hoy();
+      if(xVencida !== yVencida) return xVencida ? -1 : 1;
+      const xDias = diasEntre(x.fecha), yDias = diasEntre(y.fecha);
+      const xMas10 = xDias > 10, yMas10 = yDias > 10;
+      if(xMas10 !== yMas10) return xMas10 ? -1 : 1;
+      return yDias - xDias;
+    });
+  }
+
+  function render(){
+    const totalPendiente = activas.reduce((s,r)=>s+pendiente(r),0);
+    const totalAbonado = activas.reduce((s,r)=>s+sumaAbonos(r),0);
+    const vencidas = activas.filter(r=>r.fechaLimite && r.fechaLimite < hoy()).length;
+
+    const listaFiltrada = activas.filter(r=>{
+      if(filtro==='persona') return r.tipo==='persona';
+      if(filtro==='empresa') return r.tipo==='empresa';
+      return true;
+    });
+    const lista = ordenar(listaFiltrada);
+
+    app.innerHTML = `
+      <h1>Cuentas por pagar</h1>
+      <p class="subtitle">Control de deudas con proveedores y personas</p>
+
+      <div class="stats">
+        <div class="stat rojo"><div class="label">Total pendiente</div><div class="value">${fmt(totalPendiente)}</div></div>
+        <div class="stat amarillo"><div class="label">Ya abonado</div><div class="value">${fmt(totalAbonado)}</div></div>
+        <div class="stat info"><div class="label">Vencidas</div><div class="value">${vencidas}</div></div>
+      </div>
+
+      <div class="toolbar">
+        <div class="tabs">
+          <button class="tab ${filtro==='todas'?'active':''}" data-filtro="todas">Todas</button>
+          <button class="tab ${filtro==='persona'?'active':''}" data-filtro="persona">Personas</button>
+          <button class="tab ${filtro==='empresa'?'active':''}" data-filtro="empresa">Empresas</button>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" id="btn-exportar">Exportar a Excel</button>
+          <button class="btn btn-primary" id="btn-nueva">+ Nueva cuenta</button>
+        </div>
+      </div>
+
+      <div class="grid" id="grid"></div>
+
+      <div class="history">
+        <div class="history-head">
+          <h2>Historial de pagadas</h2>
+          <span class="history-count">${historial.length}/${HIST_LIMIT}</span>
+        </div>
+        ${historial.length >= HIST_LIMIT ? `
+          <div class="alerta-limite">
+            <span>El historial llegó a ${HIST_LIMIT} registros.</span>
+            <button class="btn btn-sm btn-rojo" id="btn-vaciar">Vaciar historial</button>
+          </div>` : ''}
+        <div class="history-list" id="history-list"></div>
+      </div>
+    `;
+
+    const grid = document.getElementById('grid');
+    if(lista.length===0){
+      grid.innerHTML = `<div class="empty">No hay cuentas ${filtro!=='todas' ? 'en esta categoría' : 'registradas'} todavía.</div>`;
+    } else {
+      grid.innerHTML = lista.map(cardHTML).join('');
+    }
+
+    const hlist = document.getElementById('history-list');
+    if(historial.length===0){
+      hlist.innerHTML = `<div class="empty">Aún no hay cuentas pagadas.</div>`;
+    } else {
+      hlist.innerHTML = [...historial].reverse().map(h => `
+        <div class="history-row">
+          <div class="h-left">
+            <span class="h-prov">${escapeHTML(h.proveedor)}</span>
+            <span class="h-meta">Pagado el ${h.fechaCancelacion} · desde ${escapeHTML(h.cuentaOrigenFinal || '—')}${h.facturaImg ? ' · <button data-ver-factura="'+h.id+'" style="border:none;background:none;color:var(--persona);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;">ver factura</button>' : ''}</span>
+          </div>
+          <span class="h-monto">${fmt(h.montoTotal)}</span>
+        </div>
+      `).join('');
+    }
+
+    // wire events
+    document.getElementById('btn-nueva').onclick = () => { modal = {type:'nueva'}; renderModal(); };
+    document.getElementById('btn-exportar').onclick = exportarCSV;
+    document.querySelectorAll('[data-ver-factura]').forEach(b => b.onclick = () => mostrarLightbox(b.dataset.verFactura));
+    document.querySelectorAll('.tab').forEach(t => t.onclick = () => { filtro = t.dataset.filtro; render(); });
+    const btnVaciar = document.getElementById('btn-vaciar');
+    if(btnVaciar) btnVaciar.onclick = async () => {
+      if(confirm('¿Vaciar todo el historial? Esta acción no se puede deshacer.')){
+        historial = [];
+        await guardarHistorial();
+        render();
+      }
+    };
+    document.querySelectorAll('[data-abonar]').forEach(b => b.onclick = () => { modal = {type:'abono', id:b.dataset.abonar}; renderModal(); });
+    document.querySelectorAll('[data-pagar]').forEach(b => b.onclick = () => { modal = {type:'pagar', id:b.dataset.pagar}; renderModal(); });
+
+    renderModal();
+  }
+
+  function cardHTML(r){
+    const dias = diasEntre(r.fecha);
+    const est = estadoDe(r);
+    const pend = pendiente(r);
+    const total = Number(r.montoTotal);
+    const pct = total>0 ? Math.min(100, Math.round((sumaAbonos(r)/total)*100)) : 0;
+    const vencida = r.fechaLimite && r.fechaLimite < hoy();
+    let badgeClass = 'ok';
+    if(dias>10) badgeClass='critico'; else if(dias>=5) badgeClass='alerta';
+
+    return `
+      <div class="card estado-${est}">
+        <div class="card-top">
+          <div>
+            <div class="proveedor">${escapeHTML(r.proveedor)}</div>
+            <span class="tag ${r.tipo}">${r.tipo}</span>
+          </div>
+          <span class="dia-badge ${badgeClass}">${dias===0?'Hoy':'Día '+dias}</span>
+        </div>
+        <div class="descripcion">${escapeHTML(r.descripcion||'')}</div>
+        ${r.referencia ? `<div class="referencia">Ref/folio: ${escapeHTML(r.referencia)}</div>` : ''}
+        ${r.facturaImg ? `<div class="factura-link"><button data-ver-factura="${r.id}">Ver factura</button></div>` : ''}
+        <div class="montos">
+          <div class="monto-pendiente">${fmt(pend)}</div>
+          ${sumaAbonos(r)>0 ? `<div class="monto-total-sub">de ${fmt(total)} total</div>` : ''}
+        </div>
+        ${sumaAbonos(r)>0 ? `
+          <div class="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+            <div class="progress-label">${pct}% abonado</div>
+          </div>` : ''}
+        <div class="limite ${vencida?'vencida':''}">
+          ${r.fechaLimite ? (vencida ? 'Venció el '+r.fechaLimite : 'Fecha límite: '+r.fechaLimite) : 'Sin fecha límite'}
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-ghost btn-sm" data-abonar="${r.id}">Abonar</button>
+          <button class="btn btn-verde btn-sm" data-pagar="${r.id}">Marcar pagada</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function mostrarLightbox(id){
+    const r = activas.find(x=>x.id===id) || historial.find(x=>x.id===id);
+    if(!r || !r.facturaImg) return;
+    const box = document.createElement('div');
+    box.className = 'lightbox';
+    box.innerHTML = `<button class="lightbox-close">✕</button><img src="${r.facturaImg}" alt="Factura"/>`;
+    box.onclick = (e) => { if(e.target===box || e.target.classList.contains('lightbox-close')) box.remove(); };
+    document.body.appendChild(box);
+  }
+
+  function comprimirImagen(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxW = 900;
+          const scale = Math.min(1, maxW / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function exportarCSV(){
+    const filas = [['Estado','Proveedor','Tipo','Descripcion','Referencia','Monto total','Monto pendiente','Fecha registro','Fecha limite','Fecha cancelacion','Cuenta(s) de pago','Detalle abonos']];
+    activas.forEach(r => {
+      const cuentas = (r.abonos||[]).map(a=>a.cuenta).filter((v,i,arr)=>arr.indexOf(v)===i).join(' / ');
+      const detalle = (r.abonos||[]).map(a=>`${a.fecha}: ${fmt(a.monto)} desde ${a.cuenta}${a.referencia?(' (ref '+a.referencia+')'):''}`).join(' | ');
+      filas.push([
+        estadoDe(r)==='rojo' ? 'Pendiente' : 'Abono parcial',
+        r.proveedor, r.tipo, r.descripcion||'', r.referencia||'',
+        r.montoTotal, pendiente(r), r.fecha, r.fechaLimite||'', '', cuentas, detalle
+      ]);
+    });
+    historial.forEach(h => {
+      filas.push([
+        'Pagada', h.proveedor, h.tipo, h.descripcion||'', h.referencia||'',
+        h.montoTotal, 0, h.fecha||'', h.fechaLimite||'', h.fechaCancelacion, h.cuentaOrigenFinal||'', ''
+      ]);
+    });
+    const csv = filas.map(fila => fila.map(campo => {
+      const s = String(campo ?? '');
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+    }).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'cuentas-por-pagar-' + hoy() + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function escapeHTML(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderModal(){
+    let existing = document.getElementById('modal-overlay');
+    if(existing) existing.remove();
+    if(!modal) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    overlay.id = 'modal-overlay';
+
+    if(modal.type==='nueva'){
+      overlay.innerHTML = `
+        <div class="modal">
+          <h3>Nueva cuenta por pagar</h3>
+          <div class="field"><label>Proveedor o persona</label><input id="f-prov" type="text" placeholder="Ej. Ferretería López"/></div>
+          <div class="field"><label>Descripción</label><input id="f-desc" type="text" placeholder="Ej. Material de construcción"/></div>
+          <div class="row2">
+            <div class="field"><label>Tipo</label>
+              <select id="f-tipo"><option value="persona">Persona</option><option value="empresa">Empresa</option></select>
+            </div>
+            <div class="field"><label>Monto total</label><input id="f-monto" type="number" step="0.01" placeholder="0.00"/></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Fecha de registro</label><input id="f-fecha" type="date" value="${hoy()}"/></div>
+            <div class="field"><label>Fecha límite (opcional)</label><input id="f-limite" type="date"/></div>
+          </div>
+          <div class="field"><label>Referencia o folio (opcional)</label><input id="f-ref" type="text" placeholder="Ej. Factura #4521"/></div>
+          <div class="field"><label>Foto de la factura (opcional)</label><input id="f-foto" type="file" accept="image/*" class="file-input"/></div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost" id="m-cancel">Cancelar</button>
+            <button class="btn btn-primary" id="m-guardar">Guardar</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      document.getElementById('m-cancel').onclick = () => { modal=null; renderModal(); };
+      document.getElementById('m-guardar').onclick = async () => {
+        const prov = document.getElementById('f-prov').value.trim();
+        const monto = parseFloat(document.getElementById('f-monto').value);
+        if(!prov || !monto || monto<=0){ alert('Escribe el proveedor/persona y un monto válido.'); return; }
+        const btnGuardar = document.getElementById('m-guardar');
+        btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando…';
+        const fotoFile = document.getElementById('f-foto').files[0];
+        let facturaImg = null;
+        if(fotoFile){
+          try{ facturaImg = await comprimirImagen(fotoFile); }
+          catch(e){ console.error('No se pudo procesar la imagen', e); }
+        }
+        activas.push({
+          id: uid(),
+          proveedor: prov,
+          descripcion: document.getElementById('f-desc').value.trim(),
+          tipo: document.getElementById('f-tipo').value,
+          montoTotal: monto,
+          fecha: document.getElementById('f-fecha').value || hoy(),
+          fechaLimite: document.getElementById('f-limite').value || null,
+          referencia: document.getElementById('f-ref').value.trim(),
+          facturaImg,
+          abonos: []
+        });
+        await guardarActivas();
+        modal = null;
+        render();
+      };
+    }
+
+    if(modal.type==='abono'){
+      const r = activas.find(x=>x.id===modal.id);
+      if(!r){ modal=null; return; }
+      overlay.innerHTML = `
+        <div class="modal">
+          <h3>Registrar abono — ${escapeHTML(r.proveedor)}</h3>
+          <p class="hint">Pendiente actual: ${fmt(pendiente(r))}</p>
+          <div class="field"><label>Monto del abono</label><input id="ab-monto" type="number" step="0.01" placeholder="0.00"/></div>
+          <div class="field"><label>¿De qué cuenta pagaste?</label><input id="ab-cuenta" type="text" placeholder="Ej. Efectivo, BBVA débito, Nu..."/></div>
+          <div class="field"><label>Fecha del abono</label><input id="ab-fecha" type="date" value="${hoy()}"/></div>
+          <div class="field"><label>Referencia de pago (opcional)</label><input id="ab-ref" type="text" placeholder="Ej. Folio de transferencia"/></div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost" id="m-cancel">Cancelar</button>
+            <button class="btn btn-primary" id="m-guardar">Registrar abono</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      document.getElementById('m-cancel').onclick = () => { modal=null; renderModal(); };
+      document.getElementById('m-guardar').onclick = async () => {
+        const monto = parseFloat(document.getElementById('ab-monto').value);
+        const cuenta = document.getElementById('ab-cuenta').value.trim();
+        if(!monto || monto<=0){ alert('Escribe un monto válido.'); return; }
+        if(!cuenta){ alert('Indica de qué cuenta pagaste.'); return; }
+        r.abonos = r.abonos || [];
+        r.abonos.push({ monto, cuenta, fecha: document.getElementById('ab-fecha').value || hoy(), referencia: document.getElementById('ab-ref').value.trim() });
+        await guardarActivas();
+        if(pendiente(r) <= 0){
+          await moverAHistorial(r, cuenta);
+        }
+        modal = null;
+        render();
+      };
+    }
+
+    if(modal.type==='pagar'){
+      const r = activas.find(x=>x.id===modal.id);
+      if(!r){ modal=null; return; }
+      overlay.innerHTML = `
+        <div class="modal">
+          <h3>Marcar como pagada — ${escapeHTML(r.proveedor)}</h3>
+          <p class="hint">Se registrará el pago del restante: ${fmt(pendiente(r))}</p>
+          <div class="field"><label>¿De qué cuenta pagaste el restante?</label><input id="pg-cuenta" type="text" placeholder="Ej. Efectivo, BBVA débito, Nu..."/></div>
+          <div class="field"><label>Referencia de pago (opcional)</label><input id="pg-ref" type="text" placeholder="Ej. Folio de transferencia"/></div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost" id="m-cancel">Cancelar</button>
+            <button class="btn btn-verde" id="m-guardar">Confirmar pago</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      document.getElementById('m-cancel').onclick = () => { modal=null; renderModal(); };
+      document.getElementById('m-guardar').onclick = async () => {
+        const cuenta = document.getElementById('pg-cuenta').value.trim();
+        if(!cuenta){ alert('Indica de qué cuenta pagaste.'); return; }
+        const referencia = document.getElementById('pg-ref').value.trim();
+        const restante = pendiente(r);
+        if(restante > 0){
+          r.abonos = r.abonos || [];
+          r.abonos.push({ monto: restante, cuenta, fecha: hoy(), referencia });
+        }
+        await moverAHistorial(r, cuenta);
+        modal = null;
+        render();
+      };
+    }
+  }
+
+  async function moverAHistorial(r, cuentaFinal){
+    activas = activas.filter(x=>x.id!==r.id);
+    historial.push({
+      id: r.id,
+      proveedor: r.proveedor,
+      tipo: r.tipo,
+      descripcion: r.descripcion,
+      referencia: r.referencia,
+      fecha: r.fecha,
+      fechaLimite: r.fechaLimite,
+      facturaImg: r.facturaImg,
+      montoTotal: r.montoTotal,
+      fechaCancelacion: hoy(),
+      cuentaOrigenFinal: cuentaFinal
+    });
+    if(historial.length > HIST_LIMIT){
+      historial = historial.slice(historial.length - HIST_LIMIT);
+    }
+    await guardarActivas();
+    await guardarHistorial();
+  }
+
+  init();
+})();
+</script>
