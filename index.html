@@ -1,8 +1,18 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Cuentas por pagar</title>
+</head>
+<body>
 <div id="app">
   <div id="loading" class="loading">Cargando tus cuentas…</div>
 </div>
 
 <style>
+  html{-webkit-text-size-adjust:100%;}
+  body{background:var(--bg, #F1F2F0);}
   :root{
     --bg:#F1F2F0;
     --surface:#FFFFFF;
@@ -27,30 +37,30 @@
     font-family:var(--font-sans);
     color:var(--ink);
     background:transparent;
-    padding:20px 16px 60px;
-    max-width:920px;
+    padding:16px 14px 100px;
+    max-width:720px;
     margin:0 auto;
   }
   .loading{padding:40px;text-align:center;color:var(--muted);font-size:14px;}
 
-  h1{font-size:22px;font-weight:700;letter-spacing:-0.01em;margin:0 0 2px;}
-  .subtitle{color:var(--muted);font-size:13px;margin:0 0 20px;}
+  h1{font-size:clamp(19px,5vw,22px);font-weight:700;letter-spacing:-0.01em;margin:0 0 2px;}
+  .subtitle{color:var(--muted);font-size:13px;margin:0 0 18px;}
 
   /* Dashboard */
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
-  .stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
-  .stat .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
-  .stat .value{font-family:var(--font-mono);font-size:19px;font-weight:600;}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 8px;}
+  .stat .label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:3px;}
+  .stat .value{font-family:var(--font-mono);font-size:clamp(14px,4vw,18px);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .stat.rojo .value{color:var(--rojo);}
   .stat.amarillo .value{color:var(--amarillo);}
   .stat.info .value{color:var(--ink);}
 
   /* Toolbar */
-  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
-  .tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:3px;}
-  .tab{border:none;background:none;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--ink-soft);cursor:pointer;}
+  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;}
+  .tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:3px;flex:1;min-width:0;}
+  .tab{border:none;background:none;padding:9px 8px;border-radius:8px;font-size:12.5px;font-weight:500;color:var(--ink-soft);cursor:pointer;flex:1;min-height:38px;white-space:nowrap;}
   .tab.active{background:var(--ink);color:#fff;}
-  .btn{border:none;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-sans);}
+  .btn{border:none;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-sans);min-height:38px;}
   .btn-primary{background:var(--ink);color:#fff;}
   .btn-primary:hover{background:#000;}
   .btn-ghost{background:var(--surface);border:1px solid var(--border);color:var(--ink);}
@@ -58,6 +68,15 @@
   .btn-sm{padding:6px 10px;font-size:12px;border-radius:7px;}
   .btn-rojo{background:var(--rojo);color:#fff;}
   .btn-verde{background:var(--verde);color:#fff;}
+  .btn-icon-only{width:38px;padding:0;font-size:16px;}
+
+  /* Floating action button (mobile-first way to add) */
+  .fab{
+    position:fixed;right:18px;bottom:22px;width:58px;height:58px;border-radius:50%;
+    background:var(--ink);color:#fff;font-size:28px;border:none;box-shadow:0 6px 18px rgba(20,26,31,0.35);
+    cursor:pointer;z-index:40;display:flex;align-items:center;justify-content:center;line-height:1;
+  }
+  .fab:active{transform:scale(0.95);}
 
   /* Cards grid */
   .grid{display:grid;grid-template-columns:1fr;gap:10px;}
@@ -103,21 +122,29 @@
   .limite.vencida{color:var(--rojo);font-weight:600;}
 
   .card-actions{display:flex;gap:8px;padding-left:6px;}
+  .card-actions .btn{flex:1;min-height:42px;font-size:13px;}
 
   .empty{text-align:center;color:var(--muted);font-size:13px;padding:40px 10px;border:1px dashed var(--border);border-radius:14px;}
 
   /* Form / modal */
-  .overlay{position:fixed;inset:0;background:rgba(20,26,31,0.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50;}
-  .modal{background:#fff;border-radius:16px;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;}
+  .overlay{position:fixed;inset:0;background:rgba(20,26,31,0.45);display:flex;align-items:flex-end;justify-content:center;z-index:50;}
+  .modal{
+    background:#fff;border-radius:20px 20px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+    width:100%;max-width:480px;max-height:88vh;overflow-y:auto;
+    animation:sheet-up .18s ease-out;
+  }
+  @keyframes sheet-up{from{transform:translateY(16px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .modal::before{content:"";display:block;width:36px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 14px;}
   .modal h3{margin:0 0 14px;font-size:16px;}
   .field{margin-bottom:12px;}
   .field label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:4px;}
   .field input, .field select{
-    width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;
-    font-size:14px;font-family:var(--font-sans);background:#fff;color:var(--ink);
+    width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:9px;
+    font-size:16px;font-family:var(--font-sans);background:#fff;color:var(--ink);min-height:44px;
   }
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+  .modal-actions .btn{min-height:46px;flex:1;font-size:14px;}
   .hint{font-size:11px;color:var(--muted);margin-top:-6px;margin-bottom:12px;}
 
   /* History */
@@ -159,6 +186,24 @@
   const app = document.getElementById('app');
 
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  async function storageGet(key){
+    if(typeof window.storage !== 'undefined'){
+      try{ return await window.storage.get(key); }catch(e){ return null; }
+    }
+    try{
+      const v = localStorage.getItem('cxp:'+key);
+      return v !== null ? {value:v} : null;
+    }catch(e){ console.error('localStorage no disponible', e); return null; }
+  }
+  async function storageSet(key, value){
+    if(typeof window.storage !== 'undefined'){
+      try{ await window.storage.set(key, value); return; }catch(e){ console.error(e); }
+    }
+    try{ localStorage.setItem('cxp:'+key, value); }
+    catch(e){ console.error('No se pudo guardar (localStorage lleno o bloqueado)', e); }
+  }
+
   function hoy(){ return new Date().toISOString().slice(0,10); }
   function diasEntre(fechaISO){
     const a = new Date(fechaISO + 'T00:00:00');
@@ -175,8 +220,8 @@
   async function init(){
     try{
       const [a, h] = await Promise.all([
-        window.storage.get('activas').catch(()=>null),
-        window.storage.get('historial').catch(()=>null)
+        storageGet('activas'),
+        storageGet('historial')
       ]);
       activas = a && a.value ? JSON.parse(a.value) : [];
       historial = h && h.value ? JSON.parse(h.value) : [];
@@ -188,12 +233,10 @@
   }
 
   async function guardarActivas(){
-    try{ await window.storage.set('activas', JSON.stringify(activas)); }
-    catch(e){ console.error('No se pudo guardar activas', e); }
+    await storageSet('activas', JSON.stringify(activas));
   }
   async function guardarHistorial(){
-    try{ await window.storage.set('historial', JSON.stringify(historial)); }
-    catch(e){ console.error('No se pudo guardar historial', e); }
+    await storageSet('historial', JSON.stringify(historial));
   }
 
   function ordenar(lista){
@@ -236,13 +279,12 @@
           <button class="tab ${filtro==='persona'?'active':''}" data-filtro="persona">Personas</button>
           <button class="tab ${filtro==='empresa'?'active':''}" data-filtro="empresa">Empresas</button>
         </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-ghost" id="btn-exportar">Exportar a Excel</button>
-          <button class="btn btn-primary" id="btn-nueva">+ Nueva cuenta</button>
-        </div>
+        <button class="btn btn-ghost btn-icon-only" id="btn-exportar" title="Exportar a Excel">⬇</button>
       </div>
 
       <div class="grid" id="grid"></div>
+
+      <button class="fab" id="btn-nueva" title="Nueva cuenta por pagar" aria-label="Nueva cuenta por pagar">+</button>
 
       <div class="history">
         <div class="history-head">
@@ -568,3 +610,5 @@
   init();
 })();
 </script>
+</body>
+</html>
